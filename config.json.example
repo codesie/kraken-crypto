@@ -1,0 +1,6 @@
+{
+    "api_key": "API-KEY-API-KEY from kraken",
+    "secret": "API-SECRET-API-SECRET from kraken",
+    "pairs": ["ADAEUR", "DOTEUR", "XETHZEUR", "XXBTZEUR"],
+    "investEurPerTrade": 25
+}
