@@ -1,28 +1,28 @@
 # https://github.com/veox/python3-krakenex/blob/742aed50e7568a3561b10c439458359b52332e61/krakenex/api.py
+import base64
+import hmac
+import hashlib
+import urllib.parse
 import requests
 import time
 import json
-
-import urllib.parse
-import hashlib
-import hmac
-import base64
+import argparse
+import os
 
 
 kraken_url = "https://api.kraken.com"
 ticker_path = "/0/public/Ticker"
 
 
-def main():
+def main(args):
     config = getConfig()
     # 1 - Get current ask price
     query_params = "?pair=" + ",".join(config["pairs"])
     ticker_result = publicCall(kraken_url + ticker_path, query_params)
-    print(json.dumps(ticker_result, indent=2))
+    # print(json.dumps(ticker_result, indent=2))
 
     for pair in config["pairs"]:
         bid_price = float(ticker_result["result"][pair]["b"][0])
-        print(pair + ": " + str(bid_price))
 
         # 2 - Create order
         data = {
@@ -34,7 +34,14 @@ def main():
         }
         add_order_path = "/0/private/AddOrder"
         # print(data)
-        privateCall(add_order_path, data)
+        if args.mode == "prod":
+            print("--- Order placed on kraken!")
+            print(data)
+            privateCall(add_order_path, data)
+        else:
+            print(
+                "--- No order placed on kraken! Shows the order which would have been executed in prod mode.")
+            print(json.dumps(data, indent=2))
 
 
 def privateCall(private_path, data):
@@ -89,10 +96,17 @@ def generateApiSign(private_path, data, secret):
 
 
 def getConfig():
-    with open("../config.json") as file:
+    script_dir = os.path.dirname(__file__)
+    config_file = os.path.join(script_dir, "..", "config.json")
+    print(config_file)
+    with open(config_file) as file:
         config = json.load(file)
     return config
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-m", "--mode", help="run the script in demo mode, without executing the order, or in production mode, which places an order.", default="demo")
+    args = parser.parse_args()
+    main(args)
