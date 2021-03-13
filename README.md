@@ -9,7 +9,7 @@ We see the outputs of the script in the console, but this outputs are logged as 
 
 ### Setup
 
-A config.json file is required in the folder kraken-crypto, which contains API-Key, API-Secret, Pairs and an amount to invest per crypto. Have a look at config.json.example.
+A config.json file is required in the folder kraken-crypto, which contains API-Key, API-Secret, Pairs and an amount to invest per crypto. Have a look at config-example.json.
 
 ### Execution
 
