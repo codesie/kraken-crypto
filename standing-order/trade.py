@@ -8,18 +8,20 @@ import time
 import json
 import argparse
 import os
+import logging
+import logging.handlers as handlers
 
 
 kraken_url = "https://api.kraken.com"
 ticker_path = "/0/public/Ticker"
 
 
-def main(args):
+def main(args, logger):
     config = getConfig()
     # 1 - Get current ask price
     query_params = "?pair=" + ",".join(config["pairs"])
     ticker_result = publicCall(kraken_url + ticker_path, query_params)
-    # print(json.dumps(ticker_result, indent=2))
+    logger.debug(json.dumps(ticker_result, indent=2))
 
     for pair in config["pairs"]:
         bid_price = float(ticker_result["result"][pair]["b"][0])
@@ -35,21 +37,23 @@ def main(args):
         add_order_path = "/0/private/AddOrder"
         # print(data)
         if args.mode == "prod":
-            print("--- Order placed on kraken!")
-            print(data)
-            privateCall(add_order_path, data)
+            logger.info("--- Order placed on kraken!")
+            logger.info("Investing: " +
+                        str(config["investEurPerTrade"]) + " euros in " + pair)
+            logger.info(json.dumps(data, indent=2))
+            privateCall(add_order_path, data, logger)
         else:
-            print(
+            logger.info(
                 "--- No order placed on kraken! Shows the order which would have been executed in prod mode.")
-            print(json.dumps(data, indent=2))
+            logger.info("Investing: " +
+                        str(config["investEurPerTrade"]) + " euros in " + pair)
+            logger.info(json.dumps(data, indent=2))
 
 
-def privateCall(private_path, data):
+def privateCall(private_path, data, logger):
     config = getConfig()
 
     data["nonce"] = generateNonce()
-
-    print(data)
 
     headers = {
         'API-Key': config["api_key"],
@@ -57,16 +61,15 @@ def privateCall(private_path, data):
         'Content-Type': 'application/x-www-form-urlencoded',
     }
 
-    print(headers)
+    logger.debug(headers)
 
     response = requests.request(
         "POST", kraken_url + private_path, headers=headers, data=data)
 
-    print(json.dumps(response.json(), indent=2))
+    logger.info(json.dumps(response.json(), indent=2))
 
 
 def publicCall(url, query_params):
-
     payload = {}
     headers = {}
 
@@ -104,9 +107,35 @@ def getConfig():
     return config
 
 
+def initializeLogger():
+    try:
+        logger = logging.getLogger("kraken_crypto")
+        logger.setLevel(logging.INFO)
+
+        init_formatter = logging.Formatter(
+            "%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
+        script_dir = os.path.dirname(__file__)
+        log_file = os.path.join(script_dir, "..", "logs", "kraken_crypto.log")
+        init_handler = logging.FileHandler(log_file)
+        init_handler.setFormatter(init_formatter)
+
+        init_stream = logging.StreamHandler()
+        init_stream.setLevel(logging.INFO)
+        init_stream.setFormatter(init_formatter)
+
+        logger.addHandler(init_handler)
+        logger.addHandler(init_stream)
+        return logger
+    except Exception as e:
+        print("logger.initial_setup\n"
+              "- " + str(e))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-m", "--mode", help="run the script in demo mode, without executing the order, or in production mode, which places an order.", default="demo")
     args = parser.parse_args()
-    main(args)
+    logger = initializeLogger()
+    main(args, logger)
