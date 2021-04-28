@@ -30,15 +30,17 @@ def main(args, logger):
     logger.debug(json.dumps(ticker_result, indent=2))
 
     for pair in config["pairs"]:
-        bid_price = float(ticker_result["result"][pair]["b"][0])
+        # bid_price = float(ticker_result["result"][pair]["b"][0])
+        # 24 h lowest price
+        lowest_price = float(ticker_result["result"][pair]["l"][0])
 
         # 2 - Create order
         data = {
             "pair": pair,
             "type": "buy",
             "ordertype": "limit",
-            "price": bid_price,
-            "volume": (config["investEurPerTrade"] / bid_price)
+            "price": lowest_price,
+            "volume": (config["investEurPerTrade"] / lowest_price)
         }
         add_order_path = "/0/private/AddOrder"
         # print(data)
