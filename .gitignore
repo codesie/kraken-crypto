@@ -2,3 +2,5 @@
 .vscode
 logs
 config.json
+server/venv
+**/__pycache__/
