@@ -3,4 +3,5 @@
 logs
 config.json
 server/venv
+server/files_api/data/
 **/__pycache__/
