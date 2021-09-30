@@ -20,4 +20,5 @@ from files_api import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/trades', views.TradeList),
+    path('api/trades/overview', views.TradesOverview),
 ]
